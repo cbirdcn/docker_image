@@ -1,0 +1,15 @@
+version: "2"
+services:
+  centos7_go:
+    image: centos7_go:v1.0
+    container_name: centos7_go
+    restart: always
+    privileged: true
+    ports:
+      - 8888:8888
+      - 8889:8889
+      - 8890:8890
+    stdin_open: true
+    tty: true
+    volumes:
+      - $PWD/../../workspace/:/workspace/
