@@ -1,0 +1,60 @@
+version: "2.0"
+services:
+  mongo-1:
+    image: mongo
+    hostname: mongo-1
+    container_name: mongo-1
+    # restart: always
+    ports:
+      - 27011:27017
+    expose:
+      - 27017
+    privileged: true
+    networks:
+      - default
+    volumes:
+      - $PWD/conf:/data/configdb/conf
+      - $PWD/data/1:/data/db
+      - $PWD/logs/1:/data/logs
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs", "--config", "/data/configdb/conf/mongo.conf"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: 123456
+  mongo-2:
+    image: mongo
+    hostname: mongo-2
+    container_name: mongo-2
+    # restart: always
+    ports:
+      - 27012:27017
+    expose:
+      - 27017
+    privileged: true
+    networks:
+      - default
+    volumes:
+      - $PWD/conf:/data/configdb/conf
+      - $PWD/data/2:/data/db
+      - $PWD/logs/2:/data/logs
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs", "--config", "/data/configdb/conf/mongo.conf"]
+  mongo-3:
+    image: mongo
+    hostname: mongo-3
+    container_name: mongo-3
+    # restart: always
+    ports:
+      - 27013:27017
+    expose:
+      - 27017
+    privileged: true
+    networks:
+      - default
+    volumes:
+      - $PWD/conf:/data/configdb/conf
+      - $PWD/data/3:/data/db
+      - $PWD/logs/3:/data/logs
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs", "--config", "/data/configdb/conf/mongo.conf"]
+
+networks:
+  default:
+    driver: bridge
