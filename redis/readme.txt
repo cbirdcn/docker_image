@@ -1,4 +1,4 @@
-docker镜像构建和容器启动过程
+redis
 
 准备：
 从common将下列文件拷贝到当前路径下
@@ -6,6 +6,7 @@ centos-7-x86_64-docker.tar.xz
 redis-7.2.4.tar.gz
 
 注意：
+redis需要编译，耗时有点久
 docker-compose将workspace文件夹挂载到了volume
 开放众多端口
 不自动重启

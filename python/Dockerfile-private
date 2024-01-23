@@ -1,0 +1,195 @@
+FROM ubuntu:14.04
+
+# 更换源
+
+WORKDIR /etc/apt/
+
+RUN sudo mv sources.list sources.list.backup \
+	&& touch sources.list \
+	&& echo 'deb http://mirrors.aliyun.com/ubuntu/ trusty main restricted universe multiverse' >> sources.list \
+	&& echo 'deb http://mirrors.aliyun.com/ubuntu/ trusty-security main restricted universe multiverse' >> sources.list \
+	&& echo 'deb http://mirrors.aliyun.com/ubuntu/ trusty-updates main restricted universe multiverse' >> sources.list \
+	&& echo 'deb http://mirrors.aliyun.com/ubuntu/ trusty-proposed main restricted universe multiverse' >> sources.list \
+	&& echo 'deb http://mirrors.aliyun.com/ubuntu/ trusty-backports main restricted universe multiverse' >> sources.list \
+	&& echo 'deb-src http://mirrors.aliyun.com/ubuntu/ trusty main restricted universe multiverse' >> sources.list \
+	&& echo 'deb-src http://mirrors.aliyun.com/ubuntu/ trusty-security main restricted universe multiverse' >> sources.list \
+	&& echo 'deb-src http://mirrors.aliyun.com/ubuntu/ trusty-updates main restricted universe multiverse' >> sources.list \
+	&& echo 'deb-src http://mirrors.aliyun.com/ubuntu/ trusty-proposed main restricted universe multiverse' >> sources.list \
+	&& echo 'deb-src http://mirrors.aliyun.com/ubuntu/ trusty-backports main restricted universe multiverse' >> sources.list
+
+# 更新源
+
+RUN sudo apt-get --quiet update \
+	&& sudo apt-get --quiet install -y \
+	build-essential\
+    clang-3.4\
+    curl\
+    git\
+    language-pack-ja\
+    libbz2-dev\
+    libevent-dev\
+    libglib2.0-dev\
+    libmysqlclient-dev\
+    libncurses5-dev\
+    libncursesw5-dev\
+    libreadline-dev\
+    libsqlcipher-dev\
+    libsqlite3-dev\
+	libpq-dev\
+    libssl-dev\
+	libffi-dev\
+    llvm\
+    make\
+    mysql-client-5.6\
+	openssl\
+    sqlite3\
+    ssh\
+    tk-dev\
+	vim\
+    wget\
+    xz-utils\
+    zlib1g-dev\
+	python3-pip\
+	python3-dev\
+	iptables \
+	&& apt-get clean \
+	&& rm -rf /var/lib/apt/lists/*
+
+# 字符集和时区
+
+ENV LANG=zh_CN.UTF-8 \
+    LANGUAGE=zh_CN:zh \
+    LC_ALL=zh_CN.UTF-8
+
+RUN localedef -i zh_CN -f UTF-8 zh_CN.UTF-8
+
+RUN ln -sf  /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
+# pyenv、python、pip、requirements
+
+RUN git clone https://github.com/pyenv/pyenv.git ~/.pyenv && \
+    chown root:root ~/.pyenv
+
+ENV PATH /root/.pyenv/bin:$PATH
+RUN echo 'export PATH="$HOME/.pyenv/bin:$PATH"' >> /root/.bashrc
+RUN echo 'eval "$(pyenv init --path)"' >> /root/.bashrc
+RUN git clone https://github.com/pyenv/pyenv-virtualenv.git /root/.pyenv/plugins/pyenv-virtualenv
+RUN echo 'eval "$(pyenv virtualenv-init -)"' >> /root/.bashrc
+RUN eval "$(pyenv init --path)" && \
+    eval "$(pyenv virtualenv-init -)" && \
+    pyenv install 3.6.1 && \
+    pyenv global 3.6.1 && \
+    pyenv virtualenv 3.6.1 oliver && \
+    pyenv rehash && \
+    pip install --quiet --upgrade pip==21.0.1 setuptools wheel pycparser
+
+WORKDIR /usr/local/
+
+# 假设ARG ARCH参数是"amd64"，并且已下载mono.deb
+COPY mono_6.12.0.182_amd64.deb mono_6.12.0.182_amd64.deb
+RUN dpkg -i mono_6.12.0.182_amd64.deb && rm mono_6.12.0.182_amd64.deb
+RUN cert-sync /etc/ssl/certs/ca-certificates.crt
+
+####### ignore start
+# 原来需要安装requirements依赖，因为不稳定，所以改成直接用离线依赖包，不需要线上install过程了
+
+# COPY requirements.txt requirements.txt
+# COPY requirements-dev.txt requirements-dev.txt
+# COPY requirements-dev-noipython.txt requirements-dev-noipython.txt
+# COPY requirements-pythonnet.txt requirements-pythonnet.txt
+# COPY 9314791.cer 9314791.cer
+# COPY pythonnet-2.2.2.1.zip pythonnet-2.2.2.1.zip
+
+# RUN grep pythonnet requirements-dev.txt > requirements-pythonnet.txt
+# RUN grep -v pythonnet requirements-dev.txt | grep -v ipython > requirements-dev.txt.tmp && mv requirements-dev.txt.tmp requirements-dev.txt
+
+# RUN eval "$(pyenv init --path)" && \
+#     pip install --quiet -r requirements.txt && \
+#     pip install --quiet -r requirements-dev.txt && \
+#     pip install --quiet -r requirements-dev-noipython.txt && \
+#     pip install --cert 9314791.cer --quiet -r requirements-pythonnet.txt
+
+# 可能出错的文件单独安装
+# RUN eval "$(pyenv init --path)" && \
+#     pip install --cert 9314791.cer  --quiet -r requirements-other.txt
+
+####### ignore end
+
+####### 离线依赖包 start
+
+# 离线安装依赖和打包过程举例:
+# /root/.pyenv/shims/pip3.6 wheel -w /tmp/pkg -r requirements.txt
+# /root/.pyenv/shims/pip3.6 download -d /tmp/pkg -r requirements.txt
+# /root/.pyenv/shims/pip3.6 install --no-index --find-links=/tmp/pkg  -r requirements.txt
+# tar zcf /tmp/pkg.tar.gz /tmp/pkg
+# ...
+# requirements-dev.txt
+# ...
+# requirements-dev-noipython.txt
+# ...
+# /root/.pyenv/shims/pip3.6 wheel -w /tmp/pkg-pythonnet --cert 9314791.cer -r requirements-pythonnet.txt
+# /root/.pyenv/shims/pip3.6 download -d /tmp/pkg-pythonnet --cert 9314791.cer -r requirements-pythonnet.txt
+# /root/.pyenv/shims/pip3.6 install --no-index --find-links=/tmp/pkg_pythonnet  -r requirements-pythonnet.txt
+# tar zcf /tmp/pkg_pythonnet.tar.gz /tmp/pkg_pythonnet
+
+
+# 解压打包好的依赖（注意原打包就带了/tmp/路径，所以解压到/）
+# pkg-dev和pkg-dev-noipython只需要一个即可。
+COPY pkg.tar.gz /tmp/
+COPY pkg-dev.tar.gz /tmp/
+COPY pkg-pythonnet.tar.gz /tmp/
+# COPY pkg-dev-noipython.tar.gz /tmp/
+RUN tar zxf /tmp/pkg.tar.gz -C /
+RUN tar zxf /tmp/pkg-dev.tar.gz -C /
+RUN tar zxf /tmp/pkg-pythonnet.tar.gz -C /
+# RUN tar zxf /tmp/pkg-noipython.tar.gz -C /
+
+
+RUN eval "$(pyenv init --path)" && \
+    eval "$(pyenv virtualenv-init -)" && \
+    pip install --no-index --find-links='/tmp/pkg'  -r requirements.txt && \ 
+    pip install --no-index --find-links='/tmp/pkg-dev'  -r requirements-dev.txt && \
+    pip install --no-index --find-links='/tmp/pkg_pythonnet'  -r requirements-pythonnet.txt
+# RUN /root/.pyenv/shims/pip3.6 install --no-index --find-links=/tmp/pkg_dev-noipython  -r requirements-dev-noipython.txt
+
+# 可交互python命令行
+
+RUN eval "$(pyenv init --path)" && \
+    eval "$(pyenv virtualenv-init -)" && \
+    pip install --quiet -I prompt-toolkit==3.0.18 && \
+    pip install --quiet -I ipython==7.12.0 --no-dependencies
+
+# RUN rm requirements.txt requirements-dev.txt requirements-pythonnet.txt 9314791.cer
+
+RUN rsync -a --delete /root/.pyenv/versions/3.6.1/lib/python3.6/site-packages/ /root/.pyenv/versions/oliver/lib/python3.6/site-packages/
+RUN rsync -r --exclude=python* --exclude=pip* /root/.pyenv/versions/3.6.1/bin/ /root/.pyenv/versions/oliver/bin/
+
+# 代码部分
+
+WORKDIR /data/server/oliver-client-server/
+
+# 解决git拉取 gnutls_handshake() failed 问题
+RUN echo 'deb http://security.ubuntu.com/ubuntu xenial-security main' >>  /etc/apt/sources.list && \
+    echo 'deb http://cz.archive.ubuntu.com/ubuntu xenial main universe' >>  /etc/apt/sources.list && \
+    sudo apt-get update && sudo apt-get install -y curl
+
+RUN git config --global user.name zhangsan && \
+    git config --global user.email a@b.com
+
+RUN make dbapi-gen-gaea
+
+# 此时，因为git是https，需要手动提供用户密码，所以后续注释掉不执行。可以用ssh-key登录避免输入账号密码。
+# RUN make sqlite-gen-gaea
+
+# RUN cd server && PASTRY_ENV=local ./batch sqlite-deploy
+
+# 修改local.py中的地址和端口
+
+# 启动服务器
+# RUN PASTRY_ENV=local ./api -h 0.0.0.0
+# 或
+# RUN /usr/local/bin/uwsgi --ini ./uwsgi.ini
+
+EXPOSE 5000
+
+CMD ["/bin/bash"]
