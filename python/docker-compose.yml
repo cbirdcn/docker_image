@@ -3,12 +3,9 @@ services:
   ubuntu14_python:
     image: ubuntu14_python:v1.0
     container_name: ubuntu14_python
-    restart: always
+    # restart: always
     ports:
-      # - 6380:6379
       - 5000:5000
-      # - 3310:3306
-      # - 11220:11211
     stdin_open: true
     tty: true
     volumes:

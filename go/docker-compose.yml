@@ -3,7 +3,7 @@ services:
   centos7_go:
     image: centos7_go:v1.0
     container_name: centos7_go
-    restart: always
+    # restart: always
     privileged: true
     ports:
       - 8888:8888
