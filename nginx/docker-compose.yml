@@ -1,0 +1,21 @@
+version: "2.2"
+
+services:
+  nginx:
+    # 方式1 新构建镜像（根据docker-compose命令行提供参数）
+    # build:
+    #   args:
+    #       - USER_ID
+    #       - GROUP_ID
+    # 方式2 提前构建好镜像直接用
+    image: nginx:v1.0
+    container_name: "nginx"
+    ports:
+      - 80:80
+    privileged: true
+    stdin_open: true
+    tty: true
+    volumes:
+      - "/Users/test/Documents/docker/workspace/var/www:/var/www"
+    # links: # 因为分离了php-fpm容器去其他文件夹，所以不在此继续编写php-fpm
+    # - php-fpm:php-fpm

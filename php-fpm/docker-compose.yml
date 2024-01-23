@@ -1,0 +1,21 @@
+version: "2.2"
+
+services:
+  php-fpm:
+    # build:
+    #   args:
+    #       - USER_ID
+    #       - GROUP_ID
+    #     - PHP_XDEBUG_INSTALL="false"
+    image: php-fpm:v1.0
+    container_name: "php-fpm"
+    ports:
+      - 9000:9000
+      - 9001:9001
+    privileged: true
+    stdin_open: true
+    tty: true
+    volumes:
+      - "/Users/test/Documents/docker/workspace/var/www:/var/www"
+    # environment:
+    #   - APP_ENV
