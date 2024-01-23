@@ -17,6 +17,7 @@ conf中提供了mongodb配置.conf和mongo副本之间通信的秘钥文件.key�
 https://www.cnblogs.com/jiagooushi/p/16477696.html
 https://blog.51cto.com/u_15187242/2744717
 https://www.cnblogs.com/ejiyuan/p/17255287.html
+https://github.com/cbirdcn/cbirdcn.github.io/blob/main/practice/MongoDB-%E9%9B%86%E7%BE%A4%E9%AB%98%E5%8F%AF%E7%94%A8%E4%B8%8E%E5%AE%9E%E8%B7%B5.md
 
 执行：
 docker-compose up -d
@@ -46,4 +47,4 @@ docker-compose up -d
 # 客户端连接检查
 PRIMARY地址：mongodb://root:123456@localhost:27011/?directConnection=true&authMechanism=DEFAULT
 # mongosh下次连接，注意主从
-mongosh --port 27017 -u "admin" -p "123456" --authenticationDatabase
+mongosh --port 27017 -u "root" -p "123456" --authenticationDatabase

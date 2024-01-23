@@ -2,7 +2,8 @@ version: '3.7'
 services:
   zookeeper:
     image: wurstmeister/zookeeper
-    restart: always
+    container_name: kafka_zookeeper
+    # restart: always
     volumes:
       - ./data:/data
     ports:
@@ -10,7 +11,8 @@ services:
        
   kafka:
     image: wurstmeister/kafka
-    restart: always
+    container_name: kafka_kafka
+    # restart: always
     ports:
       - 9092:9092
     environment:

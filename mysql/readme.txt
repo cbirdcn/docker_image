@@ -1,6 +1,7 @@
 mysql单机服务器
 
 准备：
+docker pull mysql:5.7
 
 注意：
 端口映射3306

@@ -1,12 +1,13 @@
 version: "2"
 services:
-  centos7_redis:
-    image: centos7_redis:v1.0
-    container_name: centos7_redis
-    restart: always
+  redis:
+    image: redis:v1.0
+    container_name: redis
+    # restart: always
     ports:
       - 6379:6379
     stdin_open: true
     tty: true
+    command: [ "redis-server", "/etc/redis/redis.conf" ]
     volumes:
-      - $PWD/../../workspace/:/workspace/
+      - $PWD/../../workspace/:/workspace/ # 可以加载文件，包含要运行的命令
